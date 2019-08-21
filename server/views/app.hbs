@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>{{appName}}</title>
+  <link rel="stylesheet" type="text/css" href="stylesheets/index.css">
+  <!--<script  src="https://code.jquery.com/jquery-3.1.1.min.js"  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="  crossorigin="anonymous"></script>-->
+  <script src="https://unpkg.com/@shopify/app-bridge@1"></script>
+  <script type="text/javascript">
+    var AppBridge = window['app-bridge'];
+    var createApp = AppBridge.createApp;
+    var actions = AppBridge.actions;
+    var Redirect = actions.Redirect;
+
+    //TODO receive from template vars
+    const debug = {{debug}};
+    const shopOrigin = {{shopOrigin}};
+    const apiKey = {{apiKey}};
+    const serviceAddress = {{serviceAddress}};
+    const state = {{state}};
+    const scope = {{scope}};
+
+    const redirectUri = serviceAddress + '/shopify/callback';
+    const permissionUrl = '/oauth/authorize?client_id='
+        + apiKey + '&state=' + state + '&scope=' + scope + '&redirect_uri=' + redirectUri;
+
+    // If the current window is the 'parent', change the URL by setting location.href
+    if (window.top == window.self) {
+      window.location.assign('https://' + shopOrigin + '/admin' + permissionUrl);
+    } else {
+      const app = createApp({
+        apiKey: apiKey,
+        shopOrigin: shopOrigin,
+        debug,
+      });
+
+      Redirect.create(app).dispatch(Redirect.Action.ADMIN_PATH, permissionUrl);
+    }
+  </script>
+
+  <script type="text/javascript">
+    // ShopifyApp.ready(function(){
+    //   ShopifyApp.Bar.initialize({
+    //     icon: 'https://ezyslips.in/embedded/sms/images/sms_icon_60x60.png',
+    //     icon: '/images/embedded_app.logo.128x128.png',
+    //     title: 'Settings',
+    //     buttons: {
+    //       primary: {
+    //         label: 'Save',
+    //         message: 'form_sms_notifications_submit',
+    //         callback: function(){
+    //           ShopifyApp.Bar.loadingOn();
+    //         }
+    //       },
+    //       secondary:
+    //         [{
+    //           label: "Like our service? Leave us a review",
+    //           href: "https://apps.shopify.com/sms-notifications-1#reviews-heading",
+    //           target: "new"
+    //         },{
+    //           label: 'FAQ',
+    //           href: "https://ezyslips.in/embedded/sms/faq.php",
+    //           target: "new"
+    //         },]
+    //       /*secondary:
+    //           {
+    //               label: "Like our service? Leave us a review",
+    //               href: "https://apps.shopify.com/sms-notifications-1#reviews-heading",
+    //               target: "new"
+    //           }*/
+    //     }
+    //   });
+    //
+    //
+    //   ShopifyApp.Bar.loadingOff();
+    // });
+  </script>
+  <!--<link rel="stylesheet" type="text/css" href="seaff/seaff.css">-->
+  <style>
+    hr {
+      margin: 15px 0px 10px 0px;
+      padding: 0px;
+      border-top: 0px;
+      border-bottom: 1px solid #f4f4f4;
+      height: 0px;
+    }
+
+    h1 {
+      font-weight: bold;
+    }
+  </style>
+
+  <!--<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">-->
+
+</head>
+
+<body>
+<style>
+</style>
+
+<div class="section">
+  <div class="section-summary">
+    <h1>Connect your handwriting account</h1>
+  </div>
+  <div class="section-content">
+    <button id="sign-in-button" class="" onclick="connectHandwritingAccount()">Connect account</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-summary">
+    <h1>Notification Preference</h1>
+    <p>Select when to send card</p>
+  </div>
+  <div class="section-content">
+
+    <div class="section-row">
+      <div class="section-cell">
+        <h3 style="border-bottom:1px solid #ccc;">Customers Account</h3>
+        <div class="cell-container">
+
+          <div class="cell-column">
+            <div class="cell-container">
+              <div class="cell-column">
+                <label class="label-normal">Create:</label>
+              </div>
+              <div class="cell-column">
+                <input id="customers_create_c" type="checkbox" name="settings[customers][create][notify]" value="0">
+                <label for="customers_create_c">Notify Customer</label>
+              </div>
+              <div class="cell-column">
+                <select id="customers_create_a" name="settings[customers][create][campaign]">
+                  <option disabled selected>campaign id</option>
+                  <option>Пункт 1</option>
+                  <option>Пункт 2</option>
+                </select>
+                <label for="customers_create_a">Select Campaign</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-summary">
+    <h1>Notification Preference</h1>
+    <p>Select when to send card</p>
+  </div>
+  <div class="section-content">
+    <a
+        href="https://hc-application-interface-test.firebaseapp.com/stationery/new/stationery"
+        class="" target="_blank"
+        rel="noopener noreferrer"
+    >
+      Create campaign
+    </a>
+  </div>
+</div>
+
+<script type="text/javascript">
+  function connectHandwritingAccount() {
+
+  }
+  function loadUserCampaigns() {
+
+  }
+  function addRecipientsToCampaignHook() {
+
+  }
+</script>
+</body>
+
+</html>
