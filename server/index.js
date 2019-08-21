@@ -15,7 +15,7 @@ const {
 } = process.env;
 
 
-const scopes = 'read_products';
+const scopes = 'read_customers';
 
 
 app.use('/', express.static(path.resolve(__dirname, '../public')));
@@ -41,7 +41,7 @@ app.get('/shopify', (req, res) => {
       '&state=' + state +
       '&redirect_uri=' + redirectUri;
 
-    return res.redirect('/authForm.html');
+    //return res.redirect('/authForm.html');
 
     res.cookie('state', state);
     res.redirect(installUrl);

@@ -2,163 +2,150 @@
 <html>
 
 <head>
-    <title>handwriting</title>
-    <!--<script  src="https://code.jquery.com/jquery-3.1.1.min.js"  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="  crossorigin="anonymous"></script>-->
-    <!--<script src="https://cdn.shopify.com/s/assets/external/app.js"></script>-->
-    <script type="text/javascript">
-      // ShopifyApp.init({
-      //   apiKey: 'ba674799a4c9ea83b3ef6bb0714645d3',
-      //   shopOrigin: 'https://thehandwriting.myshopify.com',
-      //   debug: true
-      // });
-    </script>
+  <title>handwriting</title>
+  <link rel="stylesheet" type="text/css" href="sources/index.css">
+  <!--<script  src="https://code.jquery.com/jquery-3.1.1.min.js"  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="  crossorigin="anonymous"></script>-->
+  <!--<script src="https://cdn.shopify.com/s/assets/external/app.js"></script>-->
+  <script type="text/javascript">
+    // ShopifyApp.init({
+    //   apiKey: 'ba674799a4c9ea83b3ef6bb0714645d3',
+    //   shopOrigin: 'https://thehandwriting.myshopify.com',
+    //   debug: true
+    // });
+  </script>
 
-    <script type="text/javascript">
-      function addRecipientsToCampaign() {
+  <script type="text/javascript">
+    // ShopifyApp.ready(function(){
+    //   ShopifyApp.Bar.initialize({
+    //     icon: 'https://ezyslips.in/embedded/sms/images/sms_icon_60x60.png',
+    //     title: 'Settings',
+    //     buttons: {
+    //       primary: {
+    //         label: 'Save',
+    //         message: 'form_sms_notifications_submit',
+    //         callback: function(){
+    //           ShopifyApp.Bar.loadingOn();
+    //         }
+    //       },
+    //       secondary:
+    //         [{
+    //           label: "Like our service? Leave us a review",
+    //           href: "https://apps.shopify.com/sms-notifications-1#reviews-heading",
+    //           target: "new"
+    //         },{
+    //           label: 'FAQ',
+    //           href: "https://ezyslips.in/embedded/sms/faq.php",
+    //           target: "new"
+    //         },]
+    //       /*secondary:
+    //           {
+    //               label: "Like our service? Leave us a review",
+    //               href: "https://apps.shopify.com/sms-notifications-1#reviews-heading",
+    //               target: "new"
+    //           }*/
+    //     }
+    //   });
+    //
+    //
+    //   ShopifyApp.Bar.loadingOff();
+    // });
+  </script>
+  <!--<link rel="stylesheet" type="text/css" href="seaff/seaff.css">-->
+  <style>
+    hr {
+      margin: 15px 0px 10px 0px;
+      padding: 0px;
+      border-top: 0px;
+      border-bottom: 1px solid #f4f4f4;
+      height: 0px;
+    }
 
-      }
-      // ShopifyApp.ready(function(){
-      //   ShopifyApp.Bar.initialize({
-      //     icon: 'https://ezyslips.in/embedded/sms/images/sms_icon_60x60.png',
-      //     title: 'Settings',
-      //     buttons: {
-      //       primary: {
-      //         label: 'Save',
-      //         message: 'form_sms_notifications_submit',
-      //         callback: function(){
-      //           ShopifyApp.Bar.loadingOn();
-      //         }
-      //       },
-      //       secondary:
-      //         [{
-      //           label: "Like our service? Leave us a review",
-      //           href: "https://apps.shopify.com/sms-notifications-1#reviews-heading",
-      //           target: "new"
-      //         },{
-      //           label: 'FAQ',
-      //           href: "https://ezyslips.in/embedded/sms/faq.php",
-      //           target: "new"
-      //         },]
-      //       /*secondary:
-      //           {
-      //               label: "Like our service? Leave us a review",
-      //               href: "https://apps.shopify.com/sms-notifications-1#reviews-heading",
-      //               target: "new"
-      //           }*/
-      //     }
-      //   });
-      //
-      //
-      //   ShopifyApp.Bar.loadingOff();
-      // });
-    </script>
-    <!--<link rel="stylesheet" type="text/css" href="seaff/seaff.css">-->
-    <style>
-        hr{margin: 15px 0px 10px 0px;padding: 0px;border-top: 0px;border-bottom: 1px solid #f4f4f4;height: 0px;}
-        h1{font-weight:bold;}
-    </style>
+    h1 {
+      font-weight: bold;
+    }
+  </style>
 
-    <!--<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">-->
+  <!--<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">-->
 
-    <!--TODO-->
-    <a href="https://hc-application-interface-test.firebaseapp.com/stationery/new/stationery" class="" target="_blank">Create campaign</a>
 
-    <!--TODO Create Campaign-->
-    <!--Add Recipients add webhook -->
-    <form id="form_add_recipients" onclick="addRecipientsToCampaign()" method="POST">
-        <input type="hidden" name="shop" value="thehandwriting.myshopify.com" />
-        <input type="hidden" name="protocol" value="" />
-        <select>
-            <option>Пункт 1</option>
-            <option>Пункт 2</option>
-        </select>
 
-    </form>
-
-    <div class="section">
-        <div class="section-summary">
-            <h1>Notification Preference</h1>
-            <p>Select when to send sms</p>
-        </div>
-        <div class="section-content">
-
-            <div class="section-row">
-                <div class="section-cell">
-                    <h3 style="border-bottom:1px solid #ccc;">Orders</h3>
-                    <div class="cell-container">
-
-                        <div class="cell-column">
-                            <div class="cell-container">
-                                <div class="cell-column">
-                                    <label class="label-normal">Create:</label>
-                                </div>
-                                <div class="cell-column">
-                                    <input id="orders_create_c" type="checkbox" name="settings[orders][create][C]" value="1"  ><label for="orders_create_c">Notify Customer</label>
-                                </div>
-                                <div class="cell-column">
-                                    <input id="orders_create_a" type="checkbox" name="settings[orders][create][A]" value="1"  ><label for="orders_create_a">Notify Admin</label>
-                                </div>
-                            </div>
-                            <div class="cell-container">
-                                <div class="cell-column">
-                                    <label class="label-normal">Cancelled:</label>
-                                </div>
-                                <div class="cell-column">
-                                    <input id="orders_cancelled_c" type="checkbox" name="settings[orders][cancelled][C]" value="1"  ><label for="orders_cancelled_c">Notify Customer</label>
-                                </div>
-                                <div class="cell-column">
-                                    <input id="orders_cancelled_a" type="checkbox" name="settings[orders][cancelled][A]" value="1"  ><label for="orders_cancelled_a">Notify Admin</label>
-                                </div>
-                            </div>
-                            <div class="cell-container">
-                                <div class="cell-column">
-                                    <label class="label-normal">Fulfilled:</label>
-                                </div>
-                                <div class="cell-column">
-                                    <input id="orders_fulfilled_c" type="checkbox" name="settings[orders][fulfilled][C]" value="1"  ><label for="orders_fulfilled_c">Notify Customer</label>
-                                </div>
-                                <div class="cell-column">
-                                    <input id="orders_fulfilled_a" type="checkbox" name="settings[orders][fulfilled][A]" value="1"  ><label for="orders_fulfilled_a">Notify Admin</label>
-                                </div>
-                            </div>
-                            <div class="cell-container">
-                                <div class="cell-column">
-                                    <label class="label-normal">Partially Fulfilled:</label>
-                                </div>
-                                <div class="cell-column">
-                                    <input id="orders_partially_fulfilled_c" type="checkbox" name="settings[orders][partially_fulfilled][C]" value="1"  ><label for="orders_partially_fulfilled_c">Notify Customer</label>
-                                </div>
-                                <div class="cell-column">
-                                    <input id="orders_partially_fulfilled_a" type="checkbox" name="settings[orders][partially_fulfilled][A]" value="1"  ><label for="orders_partially_fulfilled_a">Notify Admin</label>
-                                </div>
-                            </div>
-                            <div class="cell-container">
-                                <div class="cell-column">
-                                    <label class="label-normal">Paid:</label>
-                                </div>
-                                <div class="cell-column">
-                                    <input id="orders_paid_c" type="checkbox" name="settings[orders][paid][C]" value="1"  ><label for="orders_paid_c">Notify Customer</label>
-                                </div>
-                                <div class="cell-column">
-                                    <input id="orders_paid_a" type="checkbox" name="settings[orders][paid][A]" value="1"  ><label for="orders_paid_a">Notify Admin</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
 
 </head>
 
 <body>
-    <style>
-    </style>
-    <div>Hello</div>
+  <style>
+  </style>
 
+  <div class="section">
+    <div class="section-summary">
+      <h1>Connect your handwriting account</h1>
+    </div>
+    <div class="section-content">
+      <button id="sign-in-button" class="" onclick="auth()">Connect account</button>
+    </div>
+  </div>
 
+  <div class="section">
+    <div class="section-summary">
+      <h1>Notification Preference</h1>
+      <p>Select when to send card</p>
+    </div>
+    <div class="section-content">
+
+      <div class="section-row">
+        <div class="section-cell">
+          <h3 style="border-bottom:1px solid #ccc;">Customers Account</h3>
+          <div class="cell-container">
+
+            <div class="cell-column">
+              <div class="cell-container">
+                <div class="cell-column">
+                  <label class="label-normal">Create:</label>
+                </div>
+                <div class="cell-column">
+                  <input id="customers_create_c" type="checkbox" name="settings[customers][create][notify]" value="0">
+                  <label for="customers_create_c">Notify Customer</label>
+                </div>
+                <div class="cell-column">
+                  <select id="customers_create_a" name="settings[customers][create][campaign]">
+                    <option disabled selected>campaign id</option>
+                    <option>Пункт 1</option>
+                    <option>Пункт 2</option>
+                  </select>
+                  <label for="customers_create_a">Select Campaign</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-summary">
+      <h1>Notification Preference</h1>
+      <p>Select when to send card</p>
+    </div>
+    <div class="section-content">
+      <a
+          href="https://hc-application-interface-test.firebaseapp.com/stationery/new/stationery"
+          class="" target="_blank"
+          rel="noopener noreferrer"
+      >
+        Create campaign
+      </a>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    function loadUserCampaigns() {
+
+    }
+    function addRecipientsToCampaignHook() {
+
+    }
+  </script>
 </body>
 
 </html>
