@@ -18,8 +18,8 @@ const {
   SERVICE_ADDRESS: serviceAddress,
 } = process.env;
 
-
-const scope = 'read_customers';
+//https://help.shopify.com/en/api/getting-started/authentication/oauth/scopes
+const scope = 'read_customers,read_content,write_content';
 
 //TODO
 let registered;
@@ -43,12 +43,15 @@ app.post('/auth', (req, res) => {
 
 //install and main uri
 app.get('/shopify', (req, res) => {
-  if (registered) {
+  if (true || registered) {
     //req.query
     /*hmac: "c4e13ce1f8e3edff244545688bc389df3632216c0d63da603dc1459ef"
     locale: "en"
     shop: "thehandwriting.myshopify.com"
     timestamp: "1566383028"*/
+
+    //TODO
+    const accountConnected = false;
 
     const state = nonce();
 
@@ -62,6 +65,9 @@ app.get('/shopify', (req, res) => {
       appName: APP_NAME,
       scope,
       state,
+      accountConnected,
+      connectAccountSectionClass: accountConnected ? 'hidden' : '',
+      settingsSectionClass: accountConnected ? '' : 'hidden',
     };
     return res.render('app', vars);
   }

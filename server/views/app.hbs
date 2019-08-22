@@ -5,20 +5,24 @@
   <title>{{appName}}</title>
   <link rel="stylesheet" type="text/css" href="stylesheets/index.css">
   <!--<script  src="https://code.jquery.com/jquery-3.1.1.min.js"  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="  crossorigin="anonymous"></script>-->
-  <script src="https://unpkg.com/@shopify/app-bridge@1"></script>
+  <!--<script src="https://unpkg.com/@shopify/app-bridge@1"></script>-->
+  <script src="https://unpkg.com/@shopify/app-bridge@1.6.7/umd/index.development.js"></script>
   <script type="text/javascript">
     var AppBridge = window['app-bridge'];
     var createApp = AppBridge.createApp;
     var actions = AppBridge.actions;
     var Redirect = actions.Redirect;
+    var app;
+    var accountConnected = {{accountConnected}};
 
     //TODO receive from template vars
     const debug = {{debug}};
-    const shopOrigin = {{shopOrigin}};
-    const apiKey = {{apiKey}};
-    const serviceAddress = {{serviceAddress}};
-    const state = {{state}};
-    const scope = {{scope}};
+    const shopOrigin = '{{shopOrigin}}';
+    const apiKey = '{{apiKey}}';
+    const serviceAddress = '{{serviceAddress}}';
+    const state = '{{state}}';
+    const scope = '{{scope}}';
+
 
     const redirectUri = serviceAddress + '/shopify/callback';
     const permissionUrl = '/oauth/authorize?client_id='
@@ -28,13 +32,40 @@
     if (window.top == window.self) {
       window.location.assign('https://' + shopOrigin + '/admin' + permissionUrl);
     } else {
-      const app = createApp({
+      app = createApp({
         apiKey: apiKey,
         shopOrigin: shopOrigin,
         debug,
       });
 
+      const unsubscribe = app.error((data) => {
+        // type will be the error type
+        // action will contain the original action including its id
+        // message will contain additional hints on how to fix the error
+        const {type, action, message} = data;
+        // Handle all errors here
+
+        debugger;
+      });
+
       Redirect.create(app).dispatch(Redirect.Action.ADMIN_PATH, permissionUrl);
+
+      const { TitleBar, } = actions;
+
+      const titleBarOptions = {
+        title: 'My page title',
+        /*buttons: {
+          primary: {
+            label: 'Save',
+            message: 'form_sms_notifications_submit',
+            callback: function () {
+
+            }
+          },
+        }*/
+      };
+
+      const myTitleBar = TitleBar.create(app, titleBarOptions);
     }
   </script>
 
@@ -88,6 +119,10 @@
     h1 {
       font-weight: bold;
     }
+
+    .hidden {
+      display: none;
+    }
   </style>
 
   <!--<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">-->
@@ -97,17 +132,17 @@
 <body>
 <style>
 </style>
-
-<div class="section">
+<!--if user is authenticated we do not show this section, we can decide it on server-->
+<div class="section {{connectAccountSectionClass}}" id="connectAccountSection" >
   <div class="section-summary">
     <h1>Connect your handwriting account</h1>
   </div>
   <div class="section-content">
-    <button id="sign-in-button" class="" onclick="connectHandwritingAccount()">Connect account</button>
+    <button id="sign-in-button" class="" onclick="showAuthForm(this)">Connect account</button>
   </div>
 </div>
-
-<div class="section">
+<!--may be if user is not authenticated we do not show this section, we can decide it on server-->
+<div class="section {{settingsSectionClass}}" id="notificationPreferenceSection" >
   <div class="section-summary">
     <h1>Notification Preference</h1>
     <p>Select when to send card</p>
@@ -125,16 +160,16 @@
                 <label class="label-normal">Create:</label>
               </div>
               <div class="cell-column">
-                <input id="customers_create_c" type="checkbox" name="settings[customers][create][notify]" value="0">
-                <label for="customers_create_c">Notify Customer</label>
-              </div>
-              <div class="cell-column">
-                <select id="customers_create_a" name="settings[customers][create][campaign]">
+                <select id="customers_create_a" name="settings[customers][create][campaign]" disabled >
                   <option disabled selected>campaign id</option>
                   <option>Пункт 1</option>
                   <option>Пункт 2</option>
                 </select>
                 <label for="customers_create_a">Select Campaign</label>
+              </div>
+              <div class="cell-column">
+                <input id="customers_create_c" type="checkbox" name="settings[customers][create][notify]" value="0" disabled >
+                <label for="customers_create_c">Notify Customer</label>
               </div>
             </div>
           </div>
@@ -144,10 +179,9 @@
   </div>
 </div>
 
-<div class="section">
+<div class="section {{settingsSectionClass}}">
   <div class="section-summary">
-    <h1>Notification Preference</h1>
-    <p>Select when to send card</p>
+    <h1>Create a new campaign</h1>
   </div>
   <div class="section-content">
     <a
@@ -155,19 +189,135 @@
         class="" target="_blank"
         rel="noopener noreferrer"
     >
-      Create campaign
+      visit Handwriting service
     </a>
   </div>
 </div>
 
 <script type="text/javascript">
+  let modalIsOpen = false;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    app.getState().then((data) => {
+      const {appInfo, loading, modal, navigation, pos, resourcePicker, staffMember, titleBar, toast} = data;
+      console.log('getState data=',data)
+      debugger;
+    });
+
+    app.featuresAvailable().then(function (state) {debugger
+
+    });
+  });
+
+  function showAuthForm(button) {
+    app.getState().then((data) => {
+      const {appInfo, loading, modal, navigation, pos, resourcePicker, staffMember, titleBar, toast} = data;
+      console.log('getState data=',data)
+      debugger;
+    });
+
+
+    const toastOptions = {
+      message: 'Product saved',
+      duration: 5000,
+    };
+    console.dir(app)
+    const { Toast } = actions;
+    const toastNotice = Toast.create(app, toastOptions);
+    toastNotice.dispatch(Toast.Action.SHOW);
+    return;
+
+    //debugger
+    //disable
+    button.disabled = true;
+
+    if (modalIsOpen) {
+      return;
+    }
+    modalIsOpen = true;
+
+    let authModal;
+    const { Modal, Button, } = actions;
+    const okButton = Button.create(app, {label: 'Login'});
+    okButton.subscribe(Button.Action.CLICK, () => {debugger
+      // Do something with the click action
+      auth()
+        .then(result => {
+          //save
+          authModal.dispatch(Modal.Action.CLOSE);
+
+          accountConnected = true;
+
+          const preferenceSection = document.getElementById('notificationPreferenceSection');
+          preferenceSection.classList.remove('hidden');
+          const connectionSection = document.getElementById('connectAccountSection');
+          connectionSection.classList.add('hidden');
+        })
+        .catch(error => {
+          //show error
+          debug && console.error('auth error');
+        });
+    });
+    const cancelButton = Button.create(app, {label: 'Cancel'});
+    cancelButton.subscribe(Button.Action.CLICK, () => {
+      // Do something with the click action
+      authModal.dispatch(Modal.Action.CLOSE);
+    });
+    const modalOptions = {
+      title: 'Connect to Handwriting account',
+      message: 'Sign in',
+      footer: {
+        buttons: {
+          primary: okButton,
+          secondary: [cancelButton],
+        },
+      },
+      size: Modal.Size.Large,//Auto
+    };
+    authModal = Modal.create(app, modalOptions);
+
+    /*authModal.subscribe(Modal.Action.OPEN, () => {
+      // Do something with the open event
+
+
+    });*/
+
+    authModal.subscribe(Modal.Action.CLOSE, () => {
+      // Do something with the close event
+      console.log('Modal.Action.CLOSE');
+      modalIsOpen = false;
+      button.disabled = false;
+      authModal.unsubscribe();
+    });
+
+    authModal.subscribe(Modal.Action.OPEN, () => {
+      // Do something with the close event
+      console.log('Modal.Action.OPEN')
+      modalIsOpen = true;
+    });
+
+    authModal.dispatch(Modal.Action.OPEN);
+
+    //in case of error
+    //authModal.set({title: 'My new title'});
+
+  }
+
+  function auth() {
+    //serviceAddress + '/auth'
+    return Promise.resolve('test');
+  }
+
   function connectHandwritingAccount() {
 
   }
   function loadUserCampaigns() {
 
   }
-  function addRecipientsToCampaignHook() {
+  function addHookRecipientsToCampaign() {
+
+  }
+  function removeHookRecipientsToCampaign() {
 
   }
 </script>
