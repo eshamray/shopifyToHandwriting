@@ -22,7 +22,7 @@ const {
 const scope = 'read_customers,read_content,write_content';
 
 //TODO
-let registered;
+let registered = true;
 
 // view engine setup
 // assign the swig engine to .hbs files
@@ -38,41 +38,40 @@ app.get('/error', (req, res) => res.render('error', { message: 'Something went w
 
 //TODO will be done with google service   verifyPassword
 app.post('/auth', (req, res) => {
-  res.json({user: {api_key: 'api_key464546456'}})
+  res.json({success: true, user: {api_key: 'api_key464546456'}})
+});
+
+app.get('/userCampaigns', (req, res) => {
+  const campaigns = [
+    '111eWCE6o2I0Y1aFxFxa', '222eW346o2I0Y1aFxFxa', '333eWCE6o2I0Y1aFxFxa'
+  ];
+  res.json({success: true, campaigns})
+});
+
+app.get('/shopify/settings', (req, res) => {
+  const state = nonce();
+
+  res.cookie('state', state, {httpOnly: true});
+
+  const accountConnected = false;
+
+  const vars = {
+    debug: !!TESTING,
+    shopOrigin: SHOP_ORIGIN,
+    apiKey,
+    serviceAddress,
+    appName: APP_NAME,
+    scope,
+    state,
+    accountConnected,
+    connectAccountSectionClass: accountConnected ? 'hidden' : '',
+    settingsSectionClass: accountConnected ? '' : 'hidden',
+  };
+  return res.render('app', vars);
 });
 
 //install and main uri
 app.get('/shopify', (req, res) => {
-  if (true || registered) {
-    //req.query
-    /*hmac: "c4e13ce1f8e3edff244545688bc389df3632216c0d63da603dc1459ef"
-    locale: "en"
-    shop: "thehandwriting.myshopify.com"
-    timestamp: "1566383028"*/
-
-    //TODO
-    const accountConnected = false;
-
-    const state = nonce();
-
-    res.cookie('state', state, {httpOnly: true});
-
-    const vars = {
-      debug: !!TESTING,
-      shopOrigin: SHOP_ORIGIN,
-      apiKey,
-      serviceAddress,
-      appName: APP_NAME,
-      scope,
-      state,
-      accountConnected,
-      connectAccountSectionClass: accountConnected ? 'hidden' : '',
-      settingsSectionClass: accountConnected ? '' : 'hidden',
-    };
-    return res.render('app', vars);
-  }
-
-
   const shop = req.query.shop;
   if (shop && SHOP_ORIGIN === shop) {
     const state = nonce();
@@ -126,11 +125,21 @@ app.get('/shopify/callback', (req, res) => {
     }
 
     //TODO save in DB
-    registered = true
+    if (!registered) {
+      registered = true;
+      return res.redirect(`https://${SHOP_ORIGIN}/admin/apps/${APP_NAME || ''}`);
+    } else {
+      const state = nonce();
+      const redirectUri = serviceAddress + '/shopify/settings';
+      const installUrl = 'https://' + shop +
+        '/admin/oauth/authorize?client_id=' + apiKey +
+        '&scope=' + scope +
+        '&state=' + state +
+        '&redirect_uri=' + redirectUri;
 
-    return res.redirect(`https://${SHOP_ORIGIN}/admin/apps/${APP_NAME || ''}`);
-
-    //res.status(200).send('HMAC validated');
+      res.cookie('state', state, {httpOnly: true});
+      res.redirect(installUrl);
+    }
 
 
 

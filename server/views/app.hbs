@@ -3,7 +3,7 @@
 
 <head>
   <title>{{appName}}</title>
-  <link rel="stylesheet" type="text/css" href="stylesheets/index.css">
+  <link rel="stylesheet" type="text/css" href="/stylesheets/index.css">
   <!--<script  src="https://code.jquery.com/jquery-3.1.1.min.js"  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="  crossorigin="anonymous"></script>-->
   <!--<script src="https://unpkg.com/@shopify/app-bridge@1"></script>-->
   <script src="https://unpkg.com/@shopify/app-bridge@1.6.7/umd/index.development.js"></script>
@@ -34,7 +34,8 @@
     } else {
       app = createApp({
         apiKey: apiKey,
-        shopOrigin: shopOrigin,
+        //shopOrigin: shopOrigin,
+        shopOrigin: AppBridge.getShopOrigin(),
         debug,
       });
 
@@ -48,31 +49,32 @@
         debugger;
       });
 
-      Redirect.create(app).dispatch(Redirect.Action.ADMIN_PATH, permissionUrl);
+      //Redirect.create(app).dispatch(Redirect.Action.ADMIN_PATH, permissionUrl);
 
       const { TitleBar, } = actions;
 
       const titleBarOptions = {
-        title: 'My page title',
-        /*buttons: {
-          primary: {
-            label: 'Save',
-            message: 'form_sms_notifications_submit',
-            callback: function () {
-
-            }
-          },
-        }*/
+        title: 'Settings',
+        // buttons: {
+        //   primary: {
+        //     label: 'Save',
+        //     message: 'form_sms_notifications_submit',
+        //     callback: function () {
+        //
+        //     }
+        //   },
+        // }
       };
 
       const myTitleBar = TitleBar.create(app, titleBarOptions);
+
     }
   </script>
 
   <script type="text/javascript">
     // ShopifyApp.ready(function(){
     //   ShopifyApp.Bar.initialize({
-    //     icon: 'https://ezyslips.in/embedded/sms/images/sms_icon_60x60.png',
+    //     //icon: 'https://ezyslips.in/embedded/sms/images/sms_icon_60x60.png',
     //     icon: '/images/embedded_app.logo.128x128.png',
     //     title: 'Settings',
     //     buttons: {
@@ -83,16 +85,16 @@
     //           ShopifyApp.Bar.loadingOn();
     //         }
     //       },
-    //       secondary:
-    //         [{
-    //           label: "Like our service? Leave us a review",
-    //           href: "https://apps.shopify.com/sms-notifications-1#reviews-heading",
-    //           target: "new"
-    //         },{
-    //           label: 'FAQ',
-    //           href: "https://ezyslips.in/embedded/sms/faq.php",
-    //           target: "new"
-    //         },]
+    //       // secondary:
+    //       //   [{
+    //       //     label: "Like our service? Leave us a review",
+    //       //     href: "https://apps.shopify.com/sms-notifications-1#reviews-heading",
+    //       //     target: "new"
+    //       //   },{
+    //       //     label: 'FAQ',
+    //       //     href: "https://ezyslips.in/embedded/sms/faq.php",
+    //       //     target: "new"
+    //       //   },]
     //       /*secondary:
     //           {
     //               label: "Like our service? Leave us a review",
@@ -160,10 +162,8 @@
                 <label class="label-normal">Create:</label>
               </div>
               <div class="cell-column">
-                <select id="customers_create_a" name="settings[customers][create][campaign]" disabled >
+                <select id="customers_create_a" name="settings[customers][create][campaign]" disabled onchange="onCampaignSelect(this)" >
                   <option disabled selected>campaign id</option>
-                  <option>Пункт 1</option>
-                  <option>Пункт 2</option>
                 </select>
                 <label for="customers_create_a">Select Campaign</label>
               </div>
@@ -197,38 +197,16 @@
 <script type="text/javascript">
   let modalIsOpen = false;
 
-  document.addEventListener('DOMContentLoaded', function() {
-    app.getState().then((data) => {
-      const {appInfo, loading, modal, navigation, pos, resourcePicker, staffMember, titleBar, toast} = data;
-      console.log('getState data=',data)
-      debugger;
-    });
-
-    app.featuresAvailable().then(function (state) {debugger
-
-    });
-  });
+  // document.addEventListener('DOMContentLoaded', function() {
+  //
+  // });
 
   function showAuthForm(button) {
-    app.getState().then((data) => {
-      const {appInfo, loading, modal, navigation, pos, resourcePicker, staffMember, titleBar, toast} = data;
-      console.log('getState data=',data)
-      debugger;
-    });
-
-
-    const toastOptions = {
-      message: 'Product saved',
-      duration: 5000,
-    };
-    console.dir(app)
-    const { Toast } = actions;
-    const toastNotice = Toast.create(app, toastOptions);
-    toastNotice.dispatch(Toast.Action.SHOW);
-    return;
-
-    //debugger
-    //disable
+    // app.getState().then((data) => {
+    //   const {appInfo, loading, modal, navigation, pos, resourcePicker, staffMember, titleBar, toast} = data;
+    //   console.log('getState data=',data)
+    //   debugger;
+    // });
     button.disabled = true;
 
     if (modalIsOpen) {
@@ -237,25 +215,36 @@
     modalIsOpen = true;
 
     let authModal;
-    const { Modal, Button, } = actions;
+    const { Modal, Button, Toast } = actions;
     const okButton = Button.create(app, {label: 'Login'});
-    okButton.subscribe(Button.Action.CLICK, () => {debugger
+    okButton.subscribe(Button.Action.CLICK, function () {debugger
       // Do something with the click action
-      auth()
+      const button = this;
+      const email = '';
+      const password = '';
+      auth(email, password)
         .then(result => {
-          //save
-          authModal.dispatch(Modal.Action.CLOSE);
-
           accountConnected = true;
 
           const preferenceSection = document.getElementById('notificationPreferenceSection');
           preferenceSection.classList.remove('hidden');
           const connectionSection = document.getElementById('connectAccountSection');
           connectionSection.classList.add('hidden');
+
+          enablePreferences();
+
+          authModal.dispatch(Modal.Action.CLOSE);
         })
         .catch(error => {
-          //show error
-          debug && console.error('auth error');
+          const toastOptions = {
+            message: 'Auth error',
+            duration: 5000,
+            isError: true,
+          };
+          const toastError = Toast.create(app, toastOptions);
+          toastError.dispatch(Toast.Action.SHOW);
+
+          debug && console.error('auth error', error);
         });
     });
     const cancelButton = Button.create(app, {label: 'Cancel'});
@@ -264,23 +253,17 @@
       authModal.dispatch(Modal.Action.CLOSE);
     });
     const modalOptions = {
-      title: 'Connect to Handwriting account',
-      message: 'Sign in',
+      title: 'Connect Handwriting account',
+      path: '/authForm.html',
       footer: {
         buttons: {
           primary: okButton,
           secondary: [cancelButton],
         },
       },
-      size: Modal.Size.Large,//Auto
+      size: Modal.Size.Medium,
     };
     authModal = Modal.create(app, modalOptions);
-
-    /*authModal.subscribe(Modal.Action.OPEN, () => {
-      // Do something with the open event
-
-
-    });*/
 
     authModal.subscribe(Modal.Action.CLOSE, () => {
       // Do something with the close event
@@ -297,23 +280,78 @@
     });
 
     authModal.dispatch(Modal.Action.OPEN);
-
-    //in case of error
-    //authModal.set({title: 'My new title'});
-
   }
 
-  function auth() {
-    //serviceAddress + '/auth'
-    return Promise.resolve('test');
+  function auth(email, password) {
+    if (!email || !password) {
+      //return Promise.reject(new Error('email and password are required'));
+    }
+    const options = {
+      method: 'POST',
+      body: {
+        email: email,
+        password: password
+      }
+    };
+    return fetch('/auth', options)
+      .then((response) => {
+        if (response.status === 403) {
+          throw new Error(response.json.error_message);
+        }
+        return response.json();
+      })
+      .then((results) => {
+        const api_key = results.user.api_key;
+        return api_key;
+      });
   }
 
   function connectHandwritingAccount() {
 
   }
-  function loadUserCampaigns() {
 
+  function enablePreferences() {
+    return loadUserCampaigns()
+        .then((campaigns) => {
+          const selectElement = document.getElementById('customers_create_a');
+          campaigns.forEach(campaignId => {
+            const optionElement = document.createElement('option');
+            optionElement.value = campaignId;
+            optionElement.innerHTML = campaignId;
+            selectElement.append(optionElement);
+          });
+          if (campaigns.length) {
+            selectElement.disabled = false;
+          }
+        });
   }
+
+  function loadUserCampaigns() {
+    //TODO may be we can do secure request, signed by shopify
+    const options = {
+      method: 'GET',
+    };
+    return fetch('/userCampaigns', options)
+        .then((response) => {
+          if (response.status === 403) {
+            throw new Error(response.json.error_message);
+          }
+          return response.json();
+        })
+        .then((results) => results.campaigns);
+  }
+
+  function onCampaignSelect(select) {
+    const value = select.value;
+    const notifyActiveElem = document.getElementById('customers_create_c');
+    if (value) {
+      notifyActiveElem.disabled = false;
+    } else {
+      notifyActiveElem.checked = false;
+      notifyActiveElem.disabled = true;
+    }
+  }
+
   function addHookRecipientsToCampaign() {
 
   }
