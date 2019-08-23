@@ -126,7 +126,14 @@
     }
   </style>
 
-  <!--<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">-->
+
+
+  <!--Connect account-->
+  {{#if accountConnected}}
+  {{else}}
+    <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.blue_grey-orange.min.css">
+    <script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
+  {{/if}}>
 
 </head>
 
@@ -139,7 +146,23 @@
     <h1>Connect your handwriting account</h1>
   </div>
   <div class="section-content">
-    <button id="sign-in-button" class="" onclick="showAuthForm(this)">Connect account</button>
+    <div class="mdl-card__supporting-text mdl-color-text--grey-600">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+        <input class="mdl-textfield__input" type="email" id="sign-in-email">
+        <label class="mdl-textfield__label" for="sign-in-email">Email</label>
+      </div>
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+        <input class="mdl-textfield__input" type="password" id="sign-in-password">
+        <label class="mdl-textfield__label" for="sign-in-password">Password</label>
+      </div>
+    </div>
+    <button
+        id="sign-in-button"
+        class="mdl-color-text--grey-700 mdl-button--raised mdl-button mdl-js-button mdl-js-ripple-effect"
+        onclick="connectAccount(this)"
+    >
+      Connect
+    </button>
   </div>
 </div>
 <!--may be if user is not authenticated we do not show this section, we can decide it on server-->
@@ -225,112 +248,6 @@
     toastError.dispatch(Toast.Action.SHOW);
   }
 
-  function showAuthForm(button) {
-    // app.getState().then((data) => {
-    //   const {appInfo, loading, modal, navigation, pos, resourcePicker, staffMember, titleBar, toast} = data;
-    //   console.log('getState data=',data)
-    //   debugger;
-    // });
-    button.disabled = true;
-
-    if (modalIsOpen) {
-      return;
-    }
-    modalIsOpen = true;
-
-    let authModal;
-    const { Modal, Button } = actions;
-    const okButton = Button.create(app, {label: 'Login'});
-    okButton.subscribe(Button.Action.CLICK, function () {debugger
-      // Do something with the click action
-      okButton.set({disabled: true});
-      const button = this;
-      const email = '';
-      const password = '';
-      auth(email, password)
-        .then(result => {
-          accountConnected = true;
-
-          const connectionSection = document.getElementById('connectAccountSection');
-          connectionSection.classList.add('hidden');
-
-          const createCampaignSection = document.getElementById('createCampaignSection');
-          createCampaignSection.classList.remove('hidden');
-
-          fillCampaignsSelect()
-              .then(tryEnablePreferences)
-              .catch(error => {
-                showErrorToast('Loading user campaigns error');
-                debug && console.error('Loading user campaigns error', error);
-              });
-
-          authModal.dispatch(Modal.Action.CLOSE);
-        })
-        .catch(error => {
-          okButton.set({disabled: false});
-          showErrorToast('Auth error');
-          debug && console.error('auth error', error);
-        });
-    });
-    const cancelButton = Button.create(app, {label: 'Cancel'});
-    cancelButton.subscribe(Button.Action.CLICK, () => {
-      // Do something with the click action
-      authModal.dispatch(Modal.Action.CLOSE);
-    });
-    const modalOptions = {
-      title: 'Connect Handwriting account',
-      path: '/authForm.html',
-      footer: {
-        buttons: {
-          primary: okButton,
-          secondary: [cancelButton],
-        },
-      },
-      size: Modal.Size.Medium,
-    };
-    authModal = Modal.create(app, modalOptions);
-
-    authModal.subscribe(Modal.Action.CLOSE, () => {
-      // Do something with the close event
-      console.log('Modal.Action.CLOSE');
-      modalIsOpen = false;
-      button.disabled = false;
-      authModal.unsubscribe();
-    });
-
-    authModal.subscribe(Modal.Action.OPEN, () => {
-      // Do something with the close event
-      console.log('Modal.Action.OPEN')
-      modalIsOpen = true;
-    });
-
-    authModal.dispatch(Modal.Action.OPEN);
-  }
-
-  function auth(email, password) {
-    if (!email || !password) {
-      //return Promise.reject(new Error('email and password are required'));
-    }
-    const options = {
-      method: 'POST',
-      body: {
-        email: email,
-        password: password
-      }
-    };
-    return fetch('/auth', options)
-      .then((response) => {
-        if (response.status === 403) {
-          throw new Error(response.json.error_message);
-        }
-        return response.json();
-      })
-      .then((results) => {
-        const api_key = results.user.api_key;
-        return api_key;
-      });
-  }
-
   function connectHandwritingAccount() {
 
   }
@@ -403,11 +320,69 @@
     }
   }
 
-  // function loadCurrentHooks() {
-  //   //TODO
-  //   const currentHooks = [];
-  //   return Promise.resolve(currentHooks);
-  // }
+  function connectAccount(button) {
+    const email = document.getElementById('sign-in-email').value;
+    const password = document.getElementById('sign-in-password').value;
+
+    if (!email || !password) {
+      return showErrorToast('email and password are required');
+    }
+    button.disabled = true;
+    //TODO add email validation
+    const options = {
+      method: 'POST',
+      body: JSON.stringify({email: email, password: password, shop: AppBridge.getShopOrigin()}),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+    fetch('/shopify/connectAccount', options)
+        .then((response) => {
+          if (response.status === 403) {
+            throw new Error('email and password are required');
+          }
+          if (response.status > 299) {
+            throw new Error('Authentication error');
+          }
+          return response.json();
+        })
+        // .then((results) => {
+        //   const api_key = results.user.api_key;
+        //   return api_key;
+        // })
+        .then(() => {
+          const { Toast } = actions;
+          const toastOptions = {
+            message: 'Account connected',
+            duration: 5000,
+          };
+          const toastError = Toast.create(app, toastOptions);
+          toastError.dispatch(Toast.Action.SHOW);
+        })
+        .catch(error => {
+          button.disabled = false;
+          showErrorToast(error.message);
+          debug && console.error('Auth error', error);
+          throw error;
+        })
+        .then(result => {
+          accountConnected = true;
+
+          const connectionSection = document.getElementById('connectAccountSection');
+          connectionSection.classList.add('hidden');
+
+          const createCampaignSection = document.getElementById('createCampaignSection');
+          createCampaignSection.classList.remove('hidden');
+
+          fillCampaignsSelect()
+              .then(tryEnablePreferences)
+              .catch(error => {
+                showErrorToast('Loading user campaigns error. Please, reload application');
+                debug && console.error('Loading user campaigns error', error);
+              });
+        })
+        .catch(error => {});
+  }
 
   function addHookRecipientsToCampaign() {
 

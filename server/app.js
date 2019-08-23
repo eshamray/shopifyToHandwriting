@@ -53,7 +53,17 @@ app.use(WEBHOOK_ROUTE, webhook);
 app.get('/error', (req, res) => res.render('error', { message: 'Something went wrong!' }));
 
 //TODO will be done with google service   verifyPassword
-app.post('/auth', (req, res) => {
+app.post('/shopify/connectAccount', async (req, res) => {
+  const { email, password, shop } = req.body;
+  //Referer: https://63ae819c.ngrok.io/shopify/settings?code=5cea2e6dd6cc05b60f432048fbb5d31a&hmac=c5cd386f9a0a152079da4b2082aa1c49fa645a0ef1750112856054d685924342&shop=thehandwriting.myshopify.com&state=156656766760900&timestamp=1566567668
+  //make auth and store userId in DB
+  const userId = '4545454';
+  const shopRec = await Shop.findOne({shop});
+  if (shopRec.userId) {
+    return res.status(500).json({success: false, error: 'Account was connected earlier' });
+  }
+  shopRec.userId = userId;
+  await shopRec.save();
   res.json({success: true, user: {api_key: 'api_key464546456'}})
 });
 
