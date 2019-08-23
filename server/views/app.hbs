@@ -34,7 +34,6 @@
     } else {
       app = createApp({
         apiKey: apiKey,
-        //shopOrigin: shopOrigin,
         shopOrigin: AppBridge.getShopOrigin(),
         debug,
       });
@@ -144,7 +143,7 @@
   </div>
 </div>
 <!--may be if user is not authenticated we do not show this section, we can decide it on server-->
-<div class="section {{settingsSectionClass}}" id="notificationPreferenceSection" >
+<div class="section {{settingsSectionClass}} {{notificationPreferenceSectionClass}}" id="notificationPreferenceSection" >
   <div class="section-summary">
     <h1>Notification Preference</h1>
     <p>Select when to send card</p>
@@ -164,6 +163,9 @@
               <div class="cell-column">
                 <select id="customers_create_a" name="settings[customers][create][campaign]" disabled onchange="onCampaignSelect(this)" >
                   <option disabled selected>campaign id</option>
+                  {{#each campaigns}}
+                    <option value="{{this}}" >{{this}}</option>
+                  {{/each}}
                 </select>
                 <label for="customers_create_a">Select Campaign</label>
               </div>
@@ -179,7 +181,7 @@
   </div>
 </div>
 
-<div class="section {{settingsSectionClass}}">
+<div class="section {{settingsSectionClass}}" id="createCampaignSection" >
   <div class="section-summary">
     <h1>Create a new campaign</h1>
   </div>
@@ -197,9 +199,31 @@
 <script type="text/javascript">
   let modalIsOpen = false;
 
-  // document.addEventListener('DOMContentLoaded', function() {
-  //
-  // });
+  document.addEventListener('DOMContentLoaded', function() {
+    // if (accountConnected) {
+    //   loadCurrentHooks()
+    //       .then((currentHooks) => {
+    //         const value = '222eW346o2I0Y1aFxFxa';
+    //         activateCreateCustomer(value);
+    //         tryEnablePreferences();
+    //       })
+    //       .catch(error => {
+    //         showErrorToast('Loading user campaigns data error');
+    //         debug && console.error('auth error', error);
+    //       });
+    // }
+  });
+
+  function showErrorToast(message, duration = 5000) {
+    const { Toast } = actions;
+    const toastOptions = {
+      message,
+      duration,
+      isError: true,
+    };
+    const toastError = Toast.create(app, toastOptions);
+    toastError.dispatch(Toast.Action.SHOW);
+  }
 
   function showAuthForm(button) {
     // app.getState().then((data) => {
@@ -215,10 +239,11 @@
     modalIsOpen = true;
 
     let authModal;
-    const { Modal, Button, Toast } = actions;
+    const { Modal, Button } = actions;
     const okButton = Button.create(app, {label: 'Login'});
     okButton.subscribe(Button.Action.CLICK, function () {debugger
       // Do something with the click action
+      okButton.set({disabled: true});
       const button = this;
       const email = '';
       const password = '';
@@ -226,24 +251,24 @@
         .then(result => {
           accountConnected = true;
 
-          const preferenceSection = document.getElementById('notificationPreferenceSection');
-          preferenceSection.classList.remove('hidden');
           const connectionSection = document.getElementById('connectAccountSection');
           connectionSection.classList.add('hidden');
 
-          enablePreferences();
+          const createCampaignSection = document.getElementById('createCampaignSection');
+          createCampaignSection.classList.remove('hidden');
+
+          fillCampaignsSelect()
+              .then(tryEnablePreferences)
+              .catch(error => {
+                showErrorToast('Loading user campaigns error');
+                debug && console.error('Loading user campaigns error', error);
+              });
 
           authModal.dispatch(Modal.Action.CLOSE);
         })
         .catch(error => {
-          const toastOptions = {
-            message: 'Auth error',
-            duration: 5000,
-            isError: true,
-          };
-          const toastError = Toast.create(app, toastOptions);
-          toastError.dispatch(Toast.Action.SHOW);
-
+          okButton.set({disabled: false});
+          showErrorToast('Auth error');
           debug && console.error('auth error', error);
         });
     });
@@ -310,7 +335,36 @@
 
   }
 
-  function enablePreferences() {
+  /*function activateCreateCustomer(value) {
+    if (!value) {
+      return;
+    }
+    const selectElement = document.getElementById('customers_create_a');
+    for (let i = 0; i < selectElement.children.length; i++) {
+      const option = selectElement.children[i];
+      if (option.value === value) {
+        option.selected = true;
+        const notifyActiveElem = document.getElementById('customers_create_c');
+        notifyActiveElem.disabled = false;
+        notifyActiveElem.checked = true;
+        if (selectElement.children[0]) {
+          selectElement.children[0].selected = false;
+        }
+      }
+    }
+  }*/
+
+  function tryEnablePreferences() {
+    const selectElement = document.getElementById('customers_create_a');
+
+    if (selectElement.children.length > 1) {
+      selectElement.disabled = false;
+      const preferenceSection = document.getElementById('notificationPreferenceSection');
+      preferenceSection.classList.remove('hidden');
+    }
+  }
+
+  function fillCampaignsSelect() {
     return loadUserCampaigns()
         .then((campaigns) => {
           const selectElement = document.getElementById('customers_create_a');
@@ -320,9 +374,6 @@
             optionElement.innerHTML = campaignId;
             selectElement.append(optionElement);
           });
-          if (campaigns.length) {
-            selectElement.disabled = false;
-          }
         });
   }
 
@@ -351,6 +402,12 @@
       notifyActiveElem.disabled = true;
     }
   }
+
+  // function loadCurrentHooks() {
+  //   //TODO
+  //   const currentHooks = [];
+  //   return Promise.resolve(currentHooks);
+  // }
 
   function addHookRecipientsToCampaign() {
 
