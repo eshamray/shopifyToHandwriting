@@ -4,18 +4,13 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const connectDb = require('./connectDb');
 
-// mongoose.connect('mongodb://localhost/handwritingShopify', {
-//   useMongoClient: true,
-// });
-//mongoose.Promise = require('bluebird');
-
 mongoose.connection.on('error', (err) => {
   console.error(`Database Error → ${err}`);
 });
 
 async function start() {
   await connectDb(mongoose);
-  //require('./models/Shopify');
+  require('./models/Shopify');
 
   const app = require('./app');
   app.set('port', 3000);
