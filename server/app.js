@@ -67,6 +67,56 @@ app.post('/shopify/connectAccount', async (req, res) => {
   res.json({success: true, user: {api_key: 'api_key464546456'}})
 });
 
+//TODO !!! add auth check
+app.post('/shopify/saveSettings', async (req, res) => {
+  const { customerCreatedCampaignId, customerCreatedNotifyActive, shop } = req.body;
+  const promises = [];
+  const shopRec = await Shop.findOne({shop});
+  if (!shopRec) {
+    return res.status(404).json({success: false, error: 'shop is not found'});
+  }
+  const { accessToken, onCustomerCreateWebhookId: webhookId } = shopRec;
+
+  let savedShop, webhookActionResult, onWebhookActionFinish;
+
+  if (typeof customerCreatedCampaignId !== 'undefined' && shopRec.customerCreatedCampaignId !== customerCreatedCampaignId) {
+    shopRec.customerCreatedCampaignId = customerCreatedCampaignId;
+    promises[0] = shopRec.save();
+  }
+
+  if (customerCreatedNotifyActive) {
+    promises[1] = createOnCustomerCreateWebhook({shop, accessToken, apiVersion});
+    onWebhookActionFinish = async () => {
+      const id = webhookActionResult && webhookActionResult.id;
+      if (!id) return;
+      shopRec.onCustomerCreateWebhookId = id;
+      return shopRec.save();
+    };
+  } else if (typeof customerCreatedNotifyActive !== 'undefined' && webhookId) {
+    promises[1] = deleteOnCustomerCreateWebhook({shop, accessToken, webhookId, apiVersion});
+    onWebhookActionFinish = async () => {
+      const id = webhookActionResult && webhookActionResult.id;
+      if (!id) return;
+      shopRec.onCustomerCreateWebhookId = undefined;
+      return shopRec.save();
+    };
+  }
+
+  try {
+    ([ savedShop, webhookActionResult ] = await Promise.all(promises));
+    if (onWebhookActionFinish) {
+      onWebhookActionFinish()
+        .catch(error => {
+          console.error(`On webhook action finished shop record updating error: ${error}`);
+        })
+    }
+  } catch (error) {
+    console.error(`Saving settings error: ${error}`);
+    return res.status(500).json({success: false, error: 'Saving settings error'});
+  }
+  return res.status(200).json({success: true});
+});
+
 app.get('/userCampaigns', async (req, res) => {
   const userId = '4545454';
   const campaigns = await getUserCampaigns(userId);
@@ -80,29 +130,51 @@ app.get(SETTINGS_ROUTE, async (req, res) => {
 
   const shop = req.query.shop;
 
-  const shopRec = await Shop.findOne({shop});
-
-  if (!shopRec) {
-    //to install
-    const query = Object.keys(req.query).map((key) => `${key}=${req.query[key]}`).join('&');
-    return res.redirect(`${INSTALL_ROUTE}?${query}`);
-  }
-
   try {
     if (verifyOAuth(req.query)) {
+      const shopRec = await Shop.findOne({shop});
+
+      if (!shopRec) {
+        //to install
+        const query = Object.keys(req.query).map((key) => `${key}=${req.query[key]}`).join('&');
+        return res.redirect(`${INSTALL_ROUTE}?${query}`);
+      }
+
       const accountConnected = !!shopRec.userId;
       let customerCreatedCampaignId = '';
       let campaigns = [];
       let customerCreatedNotifyActive = false;
+
+      let needUpdateShopRecord = false;
 
       if (accountConnected) {
         customerCreatedCampaignId = shopRec.customerCreatedCampaignId;
         const { shop, userId, accessToken, } = shopRec;
         const promises = [
           getUserCampaigns(userId),
-          isCustomerCreatedNotifyActive(shop, accessToken),
+          isCustomerCreatedNotifyActive({shop, accessToken, apiVersion}),
         ];
-        ([ campaigns, customerCreatedNotifyActive ] = await Promise.all(promises));
+        ([ campaigns = [], customerCreatedNotifyActive ] = await Promise.all(promises));
+
+        //check if current campaignId is present in service
+        if (!campaigns.find(c => c === customerCreatedCampaignId)) {
+          customerCreatedCampaignId = '';
+          shopRec.customerCreatedCampaignId = undefined;
+          needUpdateShopRecord = true;
+        }
+      }
+
+      if (shopRec.onCustomerCreateWebhookId && !customerCreatedNotifyActive) {
+        shopRec.onCustomerCreateWebhookId = undefined;
+        needUpdateShopRecord = true;
+      }
+
+      if (needUpdateShopRecord) {
+        console.log('update shop record');
+        shopRec.save()
+          .catch(error => {
+            console.error(`Shop record updating error: ${error}`);
+          });
       }
 
       const campaignsOptions = [
@@ -129,6 +201,8 @@ app.get(SETTINGS_ROUTE, async (req, res) => {
         campaignsOptions,
         customerCreatedCampaignId,
         customerCreatedNotifyActive,
+        customerCreatedNotifyActiveChecked: customerCreatedNotifyActive ? 'checked' : '',
+        customerCreatedNotifyActiveDisabled: accountConnected && customerCreatedCampaignId ? '' : 'disabled',
       };
       return res.render('app', vars);
     } else {
@@ -250,14 +324,45 @@ function getUserCampaigns(userId) {
   return Promise.resolve(campaigns);
 }
 
-async function isCustomerCreatedNotifyActive(shop, accessToken) {
+async function isCustomerCreatedNotifyActive({ shop, accessToken, apiVersion }) {
   const shopAPI = new ShopifyAPI({
     shopName: shop,
     accessToken,
     apiVersion,
   });
-  //получаем webhook на создание нового Customer
-  //true/false
+
+  const webhookParams = {
+    topic: 'customers/create',
+    format: 'json',
+  };
+  const webhooks = await shopAPI.webhook.list(webhookParams);
+  if (webhooks.length > 1) {
+    debugger
+  }
+  return !!webhooks.length;
+}
+
+async function createOnCustomerCreateWebhook({ shop, accessToken, apiVersion }) {
+  const shopAPI = new ShopifyAPI({
+    shopName: shop,
+    accessToken,
+    apiVersion,
+  });
+  const webhookParams = {
+    topic: 'customers/create',
+    address: `${serviceAddress}${WEBHOOK_ROUTE}/customers/create/`,
+    format: 'json',
+  };
+  return shopAPI.webhook.create(webhookParams);
+}
+
+async function deleteOnCustomerCreateWebhook({shop, accessToken, apiVersion, webhookId}) {
+  const shopAPI = new ShopifyAPI({
+    shopName: shop,
+    accessToken,
+    apiVersion,
+  });
+  return shopAPI.webhook.delete(webhookId);
 }
 
 //add webhook on delete shop
@@ -272,21 +377,6 @@ async function createOnDeleteWebhook({shop, accessToken, apiVersion, innerShopId
   const webhookParams = {
     topic: 'app/uninstalled',
     address: `${serviceAddress}${WEBHOOK_ROUTE}/app/uninstalled/?innerShopId=${innerShopId}`,
-    format: 'json',
-    fields: ['domain', 'myshopify_domain'],
-  };
-  return shopAPI.webhook.create(webhookParams);
-}
-
-async function createOnCustomerCreateWebhook({shop, accessToken, apiVersion}) {
-  const shopAPI = new ShopifyAPI({
-    shopName: shop,
-    accessToken,
-    apiVersion,
-  });
-  const webhookParams = {
-    topic: 'customers/create',
-    address: `${serviceAddress}${WEBHOOK_ROUTE}/customers/create/`,
     format: 'json',
     fields: ['domain', 'myshopify_domain'],
   };

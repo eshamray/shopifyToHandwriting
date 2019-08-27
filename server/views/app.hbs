@@ -14,6 +14,8 @@
     var Redirect = actions.Redirect;
     var app;
     var accountConnected = {{accountConnected}};
+    var initCustomerCreatedCampaignId = '{{customerCreatedCampaignId}}';
+    var initCustomerCreatedNotifyActive = {{customerCreatedNotifyActive}};
 
     //TODO receive from template vars
     const debug = {{debug}};
@@ -50,63 +52,46 @@
 
       //Redirect.create(app).dispatch(Redirect.Action.ADMIN_PATH, permissionUrl);
 
-      const { TitleBar, } = actions;
+      const { TitleBar, Button } = actions;
+      const redirect = Redirect.create(app);
 
+      //saveButton
+      const saveButton = Button.create(app, {label: 'Save'});
+      saveButton.subscribe(Button.Action.CLICK, () => {
+        //do save
+        saveSettings()
+            .then(() => {debugger
+              //TODO
+              redirect.dispatch({
+                //type: Redirect.Action.APP,
+                type: Redirect.Action.ADMIN_SECTION,
+                payload: { path: '/' },
+              });
+            })
+            .catch(error => {
+              const { Toast } = actions;
+              const toastOptions = {
+                message: 'Error saving settings',
+                duration: 5000,
+                isError: true,
+              };
+              const toastError = Toast.create(app, toastOptions);
+              toastError.dispatch(Toast.Action.SHOW);
+              debug && console.error('saveSettings error', error);
+            });
+      });
+
+      //titleBar
       const titleBarOptions = {
         title: 'Settings',
-        // buttons: {
-        //   primary: {
-        //     label: 'Save',
-        //     message: 'form_sms_notifications_submit',
-        //     callback: function () {
-        //
-        //     }
-        //   },
-        // }
+        buttons: {
+          primary: saveButton,
+        }
       };
-
       const myTitleBar = TitleBar.create(app, titleBarOptions);
-
     }
   </script>
 
-  <script type="text/javascript">
-    // ShopifyApp.ready(function(){
-    //   ShopifyApp.Bar.initialize({
-    //     //icon: 'https://ezyslips.in/embedded/sms/images/sms_icon_60x60.png',
-    //     icon: '/images/embedded_app.logo.128x128.png',
-    //     title: 'Settings',
-    //     buttons: {
-    //       primary: {
-    //         label: 'Save',
-    //         message: 'form_sms_notifications_submit',
-    //         callback: function(){
-    //           ShopifyApp.Bar.loadingOn();
-    //         }
-    //       },
-    //       // secondary:
-    //       //   [{
-    //       //     label: "Like our service? Leave us a review",
-    //       //     href: "https://apps.shopify.com/sms-notifications-1#reviews-heading",
-    //       //     target: "new"
-    //       //   },{
-    //       //     label: 'FAQ',
-    //       //     href: "https://ezyslips.in/embedded/sms/faq.php",
-    //       //     target: "new"
-    //       //   },]
-    //       /*secondary:
-    //           {
-    //               label: "Like our service? Leave us a review",
-    //               href: "https://apps.shopify.com/sms-notifications-1#reviews-heading",
-    //               target: "new"
-    //           }*/
-    //     }
-    //   });
-    //
-    //
-    //   ShopifyApp.Bar.loadingOff();
-    // });
-  </script>
   <!--<link rel="stylesheet" type="text/css" href="seaff/seaff.css">-->
   <style>
     hr {
@@ -202,8 +187,8 @@
                     id="customers_create_c"
                     type="checkbox"
                     name="settings[customers][create][notify]"
-                    value="{{customerCreatedNotifyActive}}"
-                    disabled
+                    {{customerCreatedNotifyActiveChecked}}
+                    {{customerCreatedNotifyActiveDisabled}}
                 >
                 <label for="customers_create_c">Notify Customer</label>
               </div>
@@ -233,20 +218,9 @@
 <script type="text/javascript">
   let modalIsOpen = false;
 
-  document.addEventListener('DOMContentLoaded', function() {
-    // if (accountConnected) {
-    //   loadCurrentHooks()
-    //       .then((currentHooks) => {
-    //         const value = '222eW346o2I0Y1aFxFxa';
-    //         activateCreateCustomer(value);
-    //         tryEnablePreferences();
-    //       })
-    //       .catch(error => {
-    //         showErrorToast('Loading user campaigns data error');
-    //         debug && console.error('auth error', error);
-    //       });
-    // }
-  });
+  // document.addEventListener('DOMContentLoaded', function() {
+  //
+  // });
 
   function showErrorToast(message, duration = 5000) {
     const { Toast } = actions;
@@ -395,12 +369,42 @@
         .catch(error => {});
   }
 
-  function addHookRecipientsToCampaign() {
+  function saveSettings() {
+    const initCampaignId = initCustomerCreatedCampaignId;
+    const initNotifyActive = initCustomerCreatedNotifyActive;
+    const selectElement = document.getElementById('customers_create_a');
+    const selectedIndex = selectElement.selectedIndex;
+    const campaignId = selectedIndex === 0 ? '' : selectElement.options[selectedIndex].value;
+    const notifyActiveElem = document.getElementById('customers_create_c');
+    const notifyActive = notifyActiveElem.checked;
 
-  }
-  function removeHookRecipientsToCampaign() {
+    const changed = initCampaignId !== campaignId || initNotifyActive !== notifyActive;
+    if (!changed) return Promise.resolve();
 
+    const data = {shop: AppBridge.getShopOrigin()};
+    if (initCampaignId !== campaignId) {
+      data.customerCreatedCampaignId = campaignId;
+    }
+    if (initNotifyActive !== notifyActive) {
+      data.customerCreatedNotifyActive = notifyActive;
+    }
+
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+    return fetch('/shopify/saveSettings', options)
+        .then((response) => {
+          if (response.status > 299) {
+            throw new Error('Saving settings error');
+          }
+          return response.json();
+        });
   }
+
 </script>
 </body>
 

@@ -9,6 +9,7 @@ const Shopify = mongoose.Schema({
   scope: String,
   userId: String,
   customerCreatedCampaignId: String,
+  onCustomerCreateWebhookId: String,
 });
 
 module.exports = mongoose.model('Shopify', Shopify);
