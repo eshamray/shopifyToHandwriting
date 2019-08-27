@@ -60,12 +60,10 @@
       saveButton.subscribe(Button.Action.CLICK, () => {
         //do save
         saveSettings()
-            .then(() => {debugger
-              //TODO
-              redirect.dispatch({
-                //type: Redirect.Action.APP,
-                type: Redirect.Action.ADMIN_SECTION,
-                payload: { path: '/' },
+            .then(() => {
+              redirect.dispatch(Redirect.Action.ADMIN_PATH, {
+                path: '/apps',
+                newContext: false,
               });
             })
             .catch(error => {
