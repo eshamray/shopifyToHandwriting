@@ -6,8 +6,9 @@ const router = express.Router();
 router.post('/app/uninstalled', verifyWebhook, async (req, res) => {
   const { domain, myshopify_domain } = req.body;
   //on delete shop or on delete app remove record from db
+  const { innerShopId } = req.query;
   try {
-    await Shop.remove({shop: domain});
+    await Shop.remove({shop: domain, _id: innerShopId});
   } catch (error) {
     const webhook = 'on delete app';
     console.error(`Webhook "${webhook}": Removing Shopify record error: ${error}`);

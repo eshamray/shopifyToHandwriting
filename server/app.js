@@ -7,7 +7,7 @@ const cookie = require('cookie');
 const nonce = require('nonce')();
 const querystring = require('querystring');
 //const request = require('request-promise');
-const { verifyOAuth, obtainingAccessToken } = require('./helpers');
+const { verifyOAuth, obtainAccessToken } = require('./helpers');
 const consolidate = require('consolidate');
 const Shop = require('./models/Shopify');
 const ShopifyAPI = require('shopify-api-node');
@@ -105,6 +105,14 @@ app.get(SETTINGS_ROUTE, async (req, res) => {
         ([ campaigns, customerCreatedNotifyActive ] = await Promise.all(promises));
       }
 
+      const campaignsOptions = [
+        `<option disabled ${customerCreatedCampaignId ? '' : 'selected'} >campaign id</option>`
+      ];
+      campaigns.forEach(id => {
+        const opt = `<option value="${id}" ${id === customerCreatedCampaignId ? 'selected' : '' }>${id}</option>`;
+        campaignsOptions.push(opt);
+      });
+
       const vars = {
         debug: !!TESTING,
         shopOrigin: shop,
@@ -118,7 +126,7 @@ app.get(SETTINGS_ROUTE, async (req, res) => {
         connectAccountSectionClass: accountConnected ? 'hidden' : '',
         notificationPreferenceSectionClass: campaigns.length ? '' : 'hidden',
         settingsSectionClass: accountConnected ? '' : 'hidden',
-        campaigns,
+        campaignsOptions,
         customerCreatedCampaignId,
         customerCreatedNotifyActive,
       };
@@ -204,7 +212,7 @@ app.get(CALLBACK_ROUTE, async (req, res) => {
         res.redirect(installUrl);
 
       } else {
-        const accessTokenResponse = await obtainingAccessToken(shop, code);
+        const accessTokenResponse = await obtainAccessToken(shop, code);
         const { access_token: accessToken, scope } = accessTokenResponse;
 
         const newShop = new Shop({
@@ -213,9 +221,9 @@ app.get(CALLBACK_ROUTE, async (req, res) => {
           accessToken,
         });
 
-        await newShop.save();
+        const savedShop = await newShop.save();
 
-        createOnDeleteWebhook({shop, accessToken, apiVersion})
+        createOnDeleteWebhook({shop, accessToken, apiVersion, innerShopId: savedShop._id})
           .then(result => {
             console.log('createOnDeleteWebhook', result);
             return
@@ -254,7 +262,7 @@ async function isCustomerCreatedNotifyActive(shop, accessToken) {
 
 //add webhook on delete shop
 //add webhook on delete app
-async function createOnDeleteWebhook({shop, accessToken, apiVersion}) {
+async function createOnDeleteWebhook({shop, accessToken, apiVersion, innerShopId}) {
   const shopAPI = new ShopifyAPI({
     shopName: shop,
     accessToken,
@@ -263,7 +271,7 @@ async function createOnDeleteWebhook({shop, accessToken, apiVersion}) {
 
   const webhookParams = {
     topic: 'app/uninstalled',
-    address: `${serviceAddress}${WEBHOOK_ROUTE}/app/uninstalled/`,
+    address: `${serviceAddress}${WEBHOOK_ROUTE}/app/uninstalled/?innerShopId=${innerShopId}`,
     format: 'json',
     fields: ['domain', 'myshopify_domain'],
   };

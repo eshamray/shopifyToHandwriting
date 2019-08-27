@@ -48,7 +48,7 @@ module.exports = {
     return crypto.timingSafeEqual(generatedHash, providedHmac);
   },
 
-  obtainingAccessToken(shop, code) {
+  obtainAccessToken(shop, code) {
     //Exchange temporary code for a permanent access token
     const accessTokenRequestUrl = 'https://' + shop + '/admin/oauth/access_token';
     const accessTokenPayload = {

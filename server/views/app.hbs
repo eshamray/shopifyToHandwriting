@@ -127,13 +127,12 @@
   </style>
 
 
-
-  <!--Connect account-->
   {{#if accountConnected}}
   {{else}}
+    <!--Connect account-->
     <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.blue_grey-orange.min.css">
     <script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
-  {{/if}}>
+  {{/if}}
 
 </head>
 
@@ -184,16 +183,28 @@
                 <label class="label-normal">Create:</label>
               </div>
               <div class="cell-column">
-                <select id="customers_create_a" name="settings[customers][create][campaign]" disabled onchange="onCampaignSelect(this)" >
-                  <option disabled selected>campaign id</option>
-                  {{#each campaigns}}
-                    <option value="{{this}}" >{{this}}</option>
+                <!--customerCreatedCampaignId-->
+                <select
+                    id="customers_create_a"
+                    name="settings[customers][create][campaign]"
+                    {{#if accountConnected}} {{else}}disabled{{/if}}
+                    onchange="onCampaignSelect(this)"
+                >
+                  {{#each campaignsOptions}}
+                    {{{this}}}
                   {{/each}}
                 </select>
                 <label for="customers_create_a">Select Campaign</label>
               </div>
               <div class="cell-column">
-                <input id="customers_create_c" type="checkbox" name="settings[customers][create][notify]" value="0" disabled >
+                <!--customerCreatedNotifyActive-->
+                <input
+                    id="customers_create_c"
+                    type="checkbox"
+                    name="settings[customers][create][notify]"
+                    value="{{customerCreatedNotifyActive}}"
+                    disabled
+                >
                 <label for="customers_create_c">Notify Customer</label>
               </div>
             </div>
