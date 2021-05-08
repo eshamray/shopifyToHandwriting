@@ -13,7 +13,7 @@
     "cookie": "^0.4.0",
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
-    "handlebars": "^4.5.3",
+    "handlebars": "^4.7.7",
     "mongoose": "^5.7.5",
     "nonce": "^1.0.4",
     "request": "^2.88.0",
